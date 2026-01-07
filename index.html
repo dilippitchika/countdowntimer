@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Launch Countdown - SpotterViz & SpotterModel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(89.81deg, #072B5C 3.5%, #08062F 97.12%);
+            min-height: 100vh;
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('bgimage.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.5;
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .background-pattern {
+            display: none;
+        }
+
+        .background-top,
+        .background-bottom {
+            display: none;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2vw;
+            z-index: 1;
+        }
+
+        .header-section {
+            position: fixed;
+            top: clamp(20px, 2.5vw, 80px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(15px, 2vw, 60px);
+            z-index: 10;
+        }
+
+        .logo {
+            width: clamp(220px, 22vw, 700px);
+            height: auto;
+        }
+
+        .tagline {
+            font-size: clamp(24px, 3vw, 90px);
+            font-weight: 400;
+            color: #FFFFFF;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        .products-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 90vw;
+            gap: clamp(60px, 6vw, 200px);
+        }
+
+        .product-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(20px, 2vw, 60px);
+            min-width: fit-content;
+        }
+
+        .product-info {
+            text-align: center;
+        }
+
+        .product-icon {
+            width: clamp(180px, 15vw, 450px);
+            height: clamp(180px, 15vw, 450px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            position: relative;
+            flex-shrink: 0;
+            padding: clamp(4px, 0.4vw, 12px);
+            background: linear-gradient(135deg, 
+                rgba(88, 215, 219, 0.9) 0%, 
+                rgba(100, 160, 255, 0.8) 25%,
+                rgba(150, 100, 255, 0.7) 50%,
+                rgba(100, 160, 255, 0.8) 75%,
+                rgba(88, 215, 219, 0.9) 100%);
+            box-shadow: 
+                0 0 clamp(15px, 1.5vw, 60px) rgba(88, 215, 219, 0.6),
+                0 0 clamp(30px, 3vw, 120px) rgba(100, 160, 255, 0.4),
+                inset 0 0 clamp(20px, 2vw, 70px) rgba(255, 255, 255, 0.1);
+        }
+        
+        .product-icon::before {
+            content: '';
+            position: absolute;
+            inset: clamp(3px, 0.3vw, 6px);
+            border-radius: 50%;
+            background: linear-gradient(135deg, 
+                rgba(20, 40, 90, 0.95) 0%, 
+                rgba(30, 50, 100, 0.98) 100%);
+            z-index: 0;
+        }
+
+        .product-icon img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+            position: relative;
+            z-index: 2;
+        }
+
+        .product-title {
+            font-size: clamp(32px, 3.5vw, 100px);
+            font-weight: 400;
+            font-family: 'Geist Mono', monospace;
+            background: linear-gradient(90deg, #FFFFFF 22.73%, #04d1ff 97.89%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .product-subtitle {
+            font-size: clamp(16px, 1.5vw, 45px);
+            font-weight: 300;
+            color: #FFFFFF;
+            margin: 0.5vw 0 0 0;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .countdown-container {
+            border: clamp(3px, 0.4vw, 10px) solid #58d7db;
+            border-radius: clamp(20px, 2vw, 60px);
+            background: linear-gradient(146.07deg, rgba(22, 31, 78, 1) 33.3%, rgba(41, 100, 154, 1) 79.72%);
+            padding: clamp(30px, 4vw, 100px) clamp(40px, 5vw, 150px);
+            box-shadow: 0 2vw 6vw rgba(0, 0, 0, 0.5);
+        }
+
+        .countdown {
+            display: flex;
+            gap: clamp(40px, 5vw, 150px);
+            margin-bottom: clamp(20px, 2.5vw, 80px);
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .time-unit:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: clamp(-20px, -2.5vw, -60px);
+            top: 50%;
+            transform: translateY(-50%);
+            width: clamp(2px, 0.2vw, 4px);
+            height: clamp(120px, 15vw, 350px);
+            background: linear-gradient(to bottom, rgba(88, 215, 219, 0.5), rgba(88, 215, 219, 0));
+        }
+
+        .time-label {
+            font-size: clamp(24px, 3vw, 80px);
+            font-family: 'Impact', sans-serif;
+            color: #FFFFFF;
+            opacity: 0.4;
+            margin-bottom: clamp(10px, 2vw, 50px);
+            letter-spacing: 0.15vw;
+        }
+
+        .time-value {
+            font-size: clamp(80px, 10vw, 280px);
+            font-family: 'Impact', sans-serif;
+            background: linear-gradient(180deg, #FFFFFF 35.1%, #a0eefc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            font-weight: 400;
+        }
+
+        .launch-date {
+            text-align: center;
+            padding-top: clamp(20px, 2.5vw, 70px);
+            border-top: clamp(2px, 0.2vw, 4px) solid rgba(88, 215, 219, 0.5);
+        }
+
+        .launch-date-text {
+            font-size: clamp(32px, 4vw, 120px);
+            font-family: 'Impact', sans-serif;
+            background: linear-gradient(175.04deg, #FFFFFF 29.46%, #1fd7f8 81.45%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.15vw;
+        }
+
+        .decorative-elements {
+            display: none;
+        }
+
+        /* Large TV Displays (4K and above) */
+        @media (min-width: 2560px) {
+            .container {
+                padding: 3vw;
+            }
+
+            .logo {
+                width: clamp(500px, 25vw, 850px);
+            }
+
+            .tagline {
+                font-size: clamp(60px, 4vw, 110px);
+            }
+
+            .product-icon {
+                width: clamp(300px, 18vw, 550px);
+                height: clamp(300px, 18vw, 550px);
+            }
+
+            .time-value {
+                font-size: clamp(180px, 12vw, 350px);
+            }
+
+            .time-label {
+                font-size: clamp(60px, 4vw, 100px);
+            }
+
+            .product-title {
+                font-size: clamp(70px, 5vw, 130px);
+            }
+
+            .product-subtitle {
+                font-size: clamp(35px, 2.2vw, 60px);
+            }
+
+            .launch-date-text {
+                font-size: clamp(70px, 5vw, 150px);
+            }
+
+            .countdown {
+                gap: clamp(80px, 6vw, 180px);
+            }
+
+            .countdown-container {
+                padding: clamp(60px, 5vw, 120px) clamp(80px, 6vw, 180px);
+            }
+        }
+
+        /* Responsive Design for smaller screens */
+        @media (max-width: 1200px) {
+            .products-row {
+                flex-direction: column;
+                gap: 40px;
+            }
+
+            .countdown {
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .countdown-container {
+                padding: 20px 30px;
+            }
+
+            .countdown {
+                gap: 15px;
+            }
+
+            .time-unit:not(:last-child)::after {
+                right: -8px;
+            }
+
+            .products-row {
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .countdown {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+
+            .time-unit:not(:last-child)::after {
+                display: none;
+            }
+
+            .countdown-container {
+                padding: 20px;
+            }
+
+            .products-row {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header with Logo and Tagline -->
+        <div class="header-section">
+            <img src="TSNewWhite.svg" alt="ThoughtSpot Logo" class="logo">
+            <div class="tagline">You + Agents = Superteam</div>
+        </div>
+
+        <div class="products-row">
+            <!-- SpotterModel -->
+            <div class="product-card">
+                <div class="product-icon">
+                    <img src="Agent.svg" alt="SpotterModel">
+                </div>
+                <div class="product-info">
+                    <h2 class="product-title">SpotterModel</h2>
+                    <p class="product-subtitle">From intent to data models</p>
+                </div>
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="countdown-container">
+                <div class="countdown">
+                    <div class="time-unit">
+                        <div class="time-label">DAYS</div>
+                        <div class="time-value" id="days">15</div>
+                    </div>
+                    <div class="time-unit">
+                        <div class="time-label">HOURS</div>
+                        <div class="time-value" id="hours">09</div>
+                    </div>
+                    <div class="time-unit">
+                        <div class="time-label">MINUTES</div>
+                        <div class="time-value" id="minutes">30</div>
+                    </div>
+                    <div class="time-unit">
+                        <div class="time-label">SECONDS</div>
+                        <div class="time-value" id="seconds">45</div>
+                    </div>
+                </div>
+                <div class="launch-date">
+                    <div class="launch-date-text">LAUNCH DATE : MARCH 01, 2026</div>
+                </div>
+            </div>
+
+            <!-- SpotterViz -->
+            <div class="product-card">
+                <div class="product-icon">
+                    <img src="spotterviz.svg" alt="SpotterViz">
+                </div>
+                <div class="product-info">
+                    <h2 class="product-title">SpotterViz</h2>
+                    <p class="product-subtitle">From questions to Liveboards</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown Timer Logic
+        const launchDate = new Date('March 01, 2026 00:00:00').getTime();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = launchDate - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = String(days).padStart(2, '0');
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+
+            if (distance < 0) {
+                clearInterval(countdownInterval);
+                document.querySelector('.launch-date-text').textContent = 'LAUNCHED!';
+            }
+        }
+
+        // Update countdown every second
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        updateCountdown(); // Initial call
+    </script>
+</body>
+</html>
